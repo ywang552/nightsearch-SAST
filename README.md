@@ -1,31 +1,47 @@
 # nightsearch-SAST
 
-Research scaffold for **spatial transcriptomics spot annotation** with a proposed **cross-attention, reference-dictionary-guided** architecture.
+Research scaffold for **spatial transcriptomics spot annotation** with a **cross-attention** model and an **NNLS** baseline.
 
-## Project goal
+## What now works
 
-This repository now serves as a serious starting point for a research program where:
-- **Query** comes from observed spatial spot information,
-- **Key/Value** come from a biological reference dictionary (e.g., cell-type signatures),
-- model output is a **cell-type composition distribution per spot**.
+This repo supports two runnable experiment paths:
 
-The method is intentionally a scaffold, not a finalized algorithm.
+1. **Synthetic path** (original scaffold kept working).
+2. **Real NPZ path** with both:
+   - cross-attention training/evaluation
+   - NNLS baseline evaluation
+
+The real path expects NPZ files with aligned gene names and includes a tiny generator script (`scripts/create_real_example_data.py`) so you can produce local first-run data under `data/processed/real/`.
 
 ## Repository structure
 
-- `src/nightsearch_sast/`
-  - `config.py`: typed experiment config loader
-  - `data/dataset.py`: synthetic dictionary dataset + collate
-  - `models/cross_attention.py`: spot encoder, reference encoder, cross-attention block, output head
-  - `training/train.py`: training skeleton + loss + dataloaders
-  - `main.py`: runnable experiment entrypoint
-- `scripts/run_synthetic_baseline.py`: minimal experiment runner that writes JSON metrics
-- `configs/default.yaml`: default experiment configuration
-- `report/`
-  - `literature_review.md`
-  - `research_plan.md`
-  - `final_report.md`
-- `tests/test_smoke.py`: smoke tests
+- `src/nightsearch_sast/config.py`: typed config loader (synthetic + real modes)
+- `src/nightsearch_sast/data/dataset.py`: synthetic dataset
+- `src/nightsearch_sast/data/real_data.py`: real loader + reference dictionary builder
+- `src/nightsearch_sast/models/cross_attention.py`: cross-attention model
+- `src/nightsearch_sast/baselines/nnls.py`: NNLS baseline (projected gradient)
+- `src/nightsearch_sast/evaluation/metrics.py`: unified evaluation metrics
+- `src/nightsearch_sast/training/train.py`: synthetic training + tensor-based training path
+- `scripts/run_synthetic_baseline.py`: synthetic runner
+- `scripts/run_real_pipeline.py`: real runner writing metrics artifact
+- `configs/default.yaml`: synthetic default config
+- `configs/real_example.yaml`: real mode config
+
+## Real NPZ format assumptions
+
+`spots.npz`
+- `X`: spot expression matrix `[n_spots, n_genes]`
+- `gene_names`: gene ids `[n_genes]`
+
+`reference_cells.npz`
+- `X`: single-cell expression `[n_cells, n_genes]`
+- `gene_names`: gene ids `[n_genes]`
+- `cell_types`: cell-type label for each cell `[n_cells]`
+
+Optional `spot_composition.npz`
+- `Y`: ground-truth composition `[n_spots, n_cell_types]`
+
+When `Y` is absent, the pipeline trains cross-attention on NNLS pseudo-labels and still reports reconstruction metrics honestly.
 
 ## Quickstart
 
@@ -35,37 +51,17 @@ python -m venv .venv
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 pytest -q
-python -m nightsearch_sast.main --config configs/default.yaml
 ```
 
-## What is implemented now
-
-- Modular model skeleton for cross-attention spot annotation.
-- Synthetic dictionary-driven dataset baseline with Dirichlet composition sampling.
-- Training loop skeleton with compositional KL loss.
-- Config-driven experiment entrypoint.
-- Research documentation: literature review, research plan, final report.
-
-## What is not implemented yet
-
-- Real loaders for Visium/Slide-seq/MERFISH datasets.
-- Full benchmark baselines (Tangram/cell2location/DestVI/SPOTlight reproductions).
-- End-to-end experiment tracking and reproducibility scripts.
-
-## Merge setup
-
-Run this one-time local Git configuration so merges of generated report files keep the incoming version.
-
-For Git Bash or macOS/Linux:
+Run synthetic baseline:
 
 ```bash
-git config merge.keepIncoming.name "keep incoming version"
-git config merge.keepIncoming.driver "cp %B %A"
+python scripts/run_synthetic_baseline.py --config configs/default.yaml --output artifacts/synthetic_baseline_metrics.json
 ```
 
-For Windows PowerShell:
+Run real pipeline (cross-attention + NNLS):
 
-```powershell
-git config merge.keepIncoming.name "keep incoming version"
-git config merge.keepIncoming.driver "powershell -Command Copy-Item '%B' '%A' -Force"
+```bash
+python scripts/create_real_example_data.py --output-dir data/processed/real
+python scripts/run_real_pipeline.py --config configs/real_example.yaml --output artifacts/real_pipeline_metrics.json
 ```

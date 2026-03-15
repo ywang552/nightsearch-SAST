@@ -1,0 +1,28 @@
+project_name: nightsearch-sast-real
+seed: 42
+
+data:
+  dataset_name: real_npz
+  num_genes: 40
+  num_cell_types: 4
+  spot_feature_dim: 40
+  real:
+    spots_npz_path: data/processed/real/spots.npz
+    reference_npz_path: data/processed/real/reference_cells.npz
+    target_composition_npz_path: data/processed/real/spot_composition.npz
+    train_fraction: 0.8
+    min_shared_genes: 25
+
+model:
+  d_model: 64
+  num_heads: 4
+  num_layers: 1
+  dropout: 0.1
+  ref_hidden_dim: 64
+
+train:
+  epochs: 5
+  batch_size: 8
+  lr: 0.0005
+  weight_decay: 0.0001
+  device: cpu
