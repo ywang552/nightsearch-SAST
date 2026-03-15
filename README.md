@@ -36,6 +36,8 @@ If these files are missing in your runtime, the reports should be treated as pro
 
 ## Quickstart
 
+## Quickstart
+
 ```bash
 python -m venv .venv
 . .venv/bin/activate
