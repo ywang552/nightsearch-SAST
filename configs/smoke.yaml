@@ -1,0 +1,28 @@
+project_name: nightsearch-sast-smoke
+seed: 7
+
+data:
+  dataset_name: synthetic_dictionary
+  num_genes: 64
+  num_cell_types: 8
+  spot_feature_dim: 64
+  synthetic:
+    train_samples: 32
+    val_samples: 16
+    dirichlet_alpha: 0.5
+    noise_std: 0.05
+    reference_scale: 1.0
+
+model:
+  d_model: 32
+  num_heads: 4
+  num_layers: 1
+  dropout: 0.1
+  ref_hidden_dim: 64
+
+train:
+  epochs: 1
+  batch_size: 8
+  lr: 0.0001
+  weight_decay: 0.0001
+  device: cpu

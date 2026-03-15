@@ -59,7 +59,7 @@ PYTHONPATH=src python -m nightsearch_sast.main --config configs/default.yaml
 - Cross-attention scaffold with spot and reference encoders.
 - Synthetic dictionary data generation with configurable projection behavior.
 - KL-based training/evaluation pipeline.
-- NNLS comparator metric (`nnls_val_loss_mean`) for synthetic experiments.
+- NNLS comparator metric (`nnls_val_loss_mean`) for synthetic experiments (`train()` contract).
 - Research planning docs for real-data integration and benchmark phases.
 
 ## Still missing
@@ -67,3 +67,7 @@ PYTHONPATH=src python -m nightsearch_sast.main --config configs/default.yaml
 - Real data loaders (Visium/Slide-seq/MERFISH).
 - Reproduced external baselines (Tangram/cell2location/DestVI/SPOTlight).
 - Experiment tracking, deterministic dataset splits, and plotting pipeline.
+
+## Reporting docs note
+
+Historical notes exist under both `report/` and `reports/`. For current baseline experiment output and updates, treat `reports/` as the canonical location in this phase.

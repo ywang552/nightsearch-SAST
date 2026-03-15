@@ -15,6 +15,14 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _print_metric(label: str, metrics: dict[str, float], key: str) -> None:
+    value = metrics.get(key)
+    if value is None:
+        print(f"{label}: not available for this run")
+        return
+    print(f"{label}: {value:.6f}")
+
+
 def main() -> int:
     args = parse_args()
     config_path = Path(args.config)
@@ -28,12 +36,9 @@ def main() -> int:
     print("nightsearch-SAST cross-attention scaffold")
     print("Config:", config_path)
     print("Project:", cfg.project_name)
-    print("Train loss (last):", f"{metrics['train_loss_last']:.6f}")
-    print("Validation loss (mean):", f"{metrics['val_loss_mean']:.6f}")
-    if "nnls_val_loss_mean" in metrics:
-        print("NNLS baseline validation loss (mean):", f"{metrics['nnls_val_loss_mean']:.6f}")
-    else:
-        print("NNLS baseline validation loss (mean): not available for this run")
+    _print_metric("Train loss (last)", metrics, "train_loss_last")
+    _print_metric("Validation loss (mean)", metrics, "val_loss_mean")
+    _print_metric("NNLS baseline validation loss (mean)", metrics, "nnls_val_loss_mean")
     print("Status: scaffold run complete (synthetic dictionary baseline)")
     return 0
 

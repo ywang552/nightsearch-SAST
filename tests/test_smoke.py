@@ -6,6 +6,7 @@ import sys
 
 import numpy as np
 import torch
+import pytest
 
 from nightsearch_sast.baselines.nnls import nnls_predict_composition
 from nightsearch_sast.config import load_config
@@ -41,6 +42,7 @@ def _write_real_npz_bundle(base_dir: Path) -> tuple[Path, Path, Path]:
     return spots_path, ref_path, target_path
 
 
+@pytest.mark.slow
 def test_placeholder_entrypoint_runs():
     repo_root = Path(__file__).resolve().parents[1]
     env = os.environ.copy()
@@ -112,6 +114,7 @@ def test_nnls_baseline_predicts_simplex_distribution():
     assert torch.allclose(pred.sum(dim=-1), torch.ones(batch_size), atol=1e-4)
 
 
+@pytest.mark.slow
 def test_minimal_experiment_script_writes_metrics(tmp_path: Path):
     repo_root = Path(__file__).resolve().parents[1]
     output_file = tmp_path / "metrics.json"
@@ -153,6 +156,7 @@ def test_build_reference_dictionary_groups_by_cell_type():
     assert np.allclose(dictionary[0], np.array([2.0, 3.0], dtype=np.float32))
 
 
+@pytest.mark.slow
 def test_real_pipeline_script_writes_metrics(tmp_path: Path):
     repo_root = Path(__file__).resolve().parents[1]
     spots_path, ref_path, target_path = _write_real_npz_bundle(tmp_path)
