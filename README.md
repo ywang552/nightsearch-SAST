@@ -15,10 +15,11 @@ The method is intentionally a scaffold, not a finalized algorithm.
 
 - `src/nightsearch_sast/`
   - `config.py`: typed experiment config loader
-  - `data/dataset.py`: dataset interface placeholders + collate
+  - `data/dataset.py`: synthetic dictionary dataset + collate
   - `models/cross_attention.py`: spot encoder, reference encoder, cross-attention block, output head
   - `training/train.py`: training skeleton + loss + dataloaders
   - `main.py`: runnable experiment entrypoint
+- `scripts/run_synthetic_baseline.py`: minimal experiment runner that writes JSON metrics
 - `configs/default.yaml`: default experiment configuration
 - `report/`
   - `literature_review.md` and `.pdf`
@@ -40,7 +41,7 @@ python -m nightsearch_sast.main --config configs/default.yaml
 ## What is implemented now
 
 - Modular model skeleton for cross-attention spot annotation.
-- Placeholder dataset pipeline producing synthetic tensors (for code integration testing).
+- Synthetic dictionary-driven dataset baseline with Dirichlet composition sampling.
 - Training loop skeleton with compositional KL loss.
 - Config-driven experiment entrypoint.
 - Research documentation: literature review, research plan, final report.

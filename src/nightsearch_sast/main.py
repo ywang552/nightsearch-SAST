@@ -34,7 +34,7 @@ def main() -> int:
     print("Project:", cfg.project_name)
     print("Train loss (last):", f"{metrics['train_loss_last']:.6f}")
     print("Validation loss (mean):", f"{metrics['val_loss_mean']:.6f}")
-    print("Status: scaffold run complete (placeholder data)")
+    print("Status: scaffold run complete (synthetic dictionary baseline)")
     return 0
 
 

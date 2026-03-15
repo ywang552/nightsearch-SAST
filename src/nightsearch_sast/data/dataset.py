@@ -15,16 +15,16 @@ class SpotBatch:
     target_composition: torch.Tensor
 
 
-class SpotAnnotationDataset(Dataset[SpotBatch]):
-    """Placeholder dataset for spot annotation.
+class SyntheticDictionarySpotDataset(Dataset[SpotBatch]):
+    """Synthetic spot dataset with a fixed cell-type reference dictionary.
 
-    Expected per-item tensors:
+    The per-spot composition is sampled from a Dirichlet distribution and mixed through
+    the reference dictionary to produce spot-level expression features.
+
+    Shapes:
+    - reference_dictionary: [num_cell_types, ref_dim]
     - spot_features: [num_genes]
-    - reference_embeddings: [num_cell_types, ref_dim]
     - target_composition: [num_cell_types]
-
-    TODO: replace random fallback with loaders for Visium / Slide-seq / MERFISH derivatives.
-    TODO: support sparse count matrices and optional spatial neighborhood features.
     """
 
     def __init__(
@@ -33,11 +33,40 @@ class SpotAnnotationDataset(Dataset[SpotBatch]):
         num_genes: int,
         num_cell_types: int,
         ref_dim: int,
+        dirichlet_alpha: float,
+        noise_std: float,
+        reference_scale: float = 1.0,
+        seed: int = 42,
     ) -> None:
         self.num_samples = num_samples
         self.num_genes = num_genes
         self.num_cell_types = num_cell_types
         self.ref_dim = ref_dim
+        self.noise_std = noise_std
+
+        generator = torch.Generator().manual_seed(seed)
+        self.reference_dictionary = torch.rand(
+            num_cell_types,
+            ref_dim,
+            generator=generator,
+        ) * reference_scale
+
+        concentration = torch.full(
+            (num_cell_types,),
+            fill_value=max(dirichlet_alpha, 1e-3),
+        )
+        dirichlet = torch.distributions.Dirichlet(concentration)
+
+        compositions = dirichlet.sample((num_samples,))
+        projected_reference = self.reference_dictionary
+        if ref_dim != num_genes:
+            projector = torch.rand(ref_dim, num_genes, generator=generator)
+            projected_reference = projected_reference @ projector
+
+        clean_spots = compositions @ projected_reference
+        noise = torch.randn(num_samples, num_genes, generator=generator) * noise_std
+        self.spot_matrix = (clean_spots + noise).clamp_min(0.0)
+        self.targets = compositions
 
     def __len__(self) -> int:
         return self.num_samples
@@ -46,13 +75,10 @@ class SpotAnnotationDataset(Dataset[SpotBatch]):
         if index < 0 or index >= self.num_samples:
             raise IndexError(index)
 
-        spot = torch.rand(self.num_genes)
-        reference = torch.rand(self.num_cell_types, self.ref_dim)
-        target = torch.softmax(torch.rand(self.num_cell_types), dim=0)
         return SpotBatch(
-            spot_features=spot,
-            reference_embeddings=reference,
-            target_composition=target,
+            spot_features=self.spot_matrix[index],
+            reference_embeddings=self.reference_dictionary,
+            target_composition=self.targets[index],
         )
 
 
