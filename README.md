@@ -1,98 +1,64 @@
 # nightsearch-SAST
 
-`nightsearch-SAST` is a Python research repository for future work on spatial transcriptomics spot annotation. The repository is intentionally minimal today: it provides a clean project layout, a small runnable placeholder, and a Codex-friendly cloud scaffold so later sessions can install dependencies, understand the structure, and start adding research code without repo cleanup first.
+Research scaffold for **spatial transcriptomics spot annotation** with a proposed **cross-attention, reference-dictionary-guided** architecture.
 
-The actual spot annotation method is not implemented yet. This baseline is only for environment setup, project organization, and future cloud execution.
+## Project goal
 
-## Repository Overview
+This repository now serves as a serious starting point for a research program where:
+- **Query** comes from observed spatial spot information,
+- **Key/Value** come from a biological reference dictionary (e.g., cell-type signatures),
+- model output is a **cell-type composition distribution per spot**.
 
-The repository is organized to support research code, configs, notebooks, and tests without committing to a specific modeling pipeline yet.
+The method is intentionally a scaffold, not a finalized algorithm.
 
-- `src/nightsearch_sast/`: Python package for future research modules
-- `configs/`: experiment and runtime configuration files
-- `scripts/`: helper scripts, including the Codex cloud entrypoint
-- `notebooks/`: exploratory notebooks
-- `tests/`: smoke tests and future unit tests
-- `data/`: local-only data placement guidance
+## Repository structure
 
-## Environment Setup
+- `src/nightsearch_sast/`
+  - `config.py`: typed experiment config loader
+  - `data/dataset.py`: dataset interface placeholders + collate
+  - `models/cross_attention.py`: spot encoder, reference encoder, cross-attention block, output head
+  - `training/train.py`: training skeleton + loss + dataloaders
+  - `main.py`: runnable experiment entrypoint
+- `configs/default.yaml`: default experiment configuration
+- `report/`
+  - `literature_review.md` and `.pdf`
+  - `research_plan.md` and `.pdf`
+  - `final_report.md` and `.pdf`
+- `tests/test_smoke.py`: smoke tests
 
-The intended baseline for new environments is Python 3.11.
-
-Create a virtual environment and install dependencies:
+## Quickstart
 
 ```bash
 python -m venv .venv
 . .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-```
-
-On Windows PowerShell:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-## Getting Started
-
-Run the placeholder entrypoint from the repository root:
-
-```bash
-python -m nightsearch_sast.main --config configs/default.yaml
-```
-
-Run the smoke tests:
-
-```bash
 pytest -q
-```
-
-Future Codex cloud sessions should start with:
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
 python -m nightsearch_sast.main --config configs/default.yaml
 ```
 
-## Codex Cloud Usage
+## What is implemented now
 
-The repository keeps a minimal Docker plus GitHub Actions scaffold so Codex can be run against this repo from the cloud later.
+- Modular model skeleton for cross-attention spot annotation.
+- Placeholder dataset pipeline producing synthetic tensors (for code integration testing).
+- Training loop skeleton with compositional KL loss.
+- Config-driven experiment entrypoint.
+- Research documentation: literature review, research plan, final report.
 
-- `Dockerfile` builds a Python-capable Codex runtime image.
-- `scripts/run-codex.sh` validates runtime inputs and launches the Codex CLI from the repository root.
-- `.github/workflows/validate.yml` checks the Python scaffold and container build path.
-- `.github/workflows/codex-run.yml` provides a manual GitHub Actions entrypoint for Codex tasks.
+## What is not implemented yet
 
-For local dry-run testing of the container entrypoint:
+- Real loaders for Visium/Slide-seq/MERFISH datasets.
+- Full benchmark baselines (Tangram/cell2location/DestVI/SPOTlight reproductions).
+- End-to-end experiment tracking and reproducibility scripts.
+
+## PDF deliverables
+
+PDF versions of literature review, research plan, and final report are included in `report/`.
+
+If you want richer typography, regenerate with Pandoc locally:
 
 ```bash
-docker build -t codex-cloud-repo .
-docker run --rm \
-  -e CODEX_DRY_RUN=1 \
-  -e CODEX_TASK="Inspect the repository and summarize the Python research scaffold." \
-  -v "$PWD:/workspace" \
-  codex-cloud-repo
+pandoc report/literature_review.md -o report/literature_review.pdf
+pandoc report/research_plan.md -o report/research_plan.pdf
+pandoc report/final_report.md -o report/final_report.pdf
 ```
-
-For a real cloud or local container run, set `OPENAI_API_KEY` and provide a task string.
-
-## Planned Work
-
-This repository will later be used for:
-
-- spatial transcriptomics spot annotation
-- cross attention based modeling
-- dictionary guided prediction
-- research experiments
-
-## Notes For Future Coding Sessions
-
-- Use `src/nightsearch_sast/` for importable Python modules.
-- Prefer configs under `configs/` instead of hardcoded parameters.
-- Keep exploratory work in `notebooks/`, but move reusable logic into `src/`.
-- Treat `data/` contents as local outputs unless explicitly documented otherwise.

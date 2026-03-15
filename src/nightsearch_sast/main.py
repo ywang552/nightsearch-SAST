@@ -1,14 +1,15 @@
-"""Minimal entrypoint for future research workflows."""
+"""Entrypoint for initial cross-attention spot annotation experiments."""
 
 import argparse
 from pathlib import Path
 
-import yaml
+from nightsearch_sast.config import load_config
+from nightsearch_sast.training.train import train
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Placeholder entrypoint for nightsearch-SAST research code."
+        description="Run cross-attention scaffold training for spot annotation."
     )
     parser.add_argument(
         "--config",
@@ -23,15 +24,17 @@ def main() -> int:
     config_path = Path(args.config)
 
     if not config_path.exists():
-        raise FileNotFoundError("Config file not found: {}".format(config_path))
+        raise FileNotFoundError(f"Config file not found: {config_path}")
 
-    with config_path.open("r", encoding="utf-8") as handle:
-        config = yaml.safe_load(handle) or {}
+    cfg = load_config(config_path)
+    metrics = train(cfg)
 
-    print("nightsearch-SAST placeholder")
+    print("nightsearch-SAST cross-attention scaffold")
     print("Config:", config_path)
-    print("Project:", config.get("project_name", "unknown"))
-    print("Status: scaffold ready for future research code")
+    print("Project:", cfg.project_name)
+    print("Train loss (last):", f"{metrics['train_loss_last']:.6f}")
+    print("Validation loss (mean):", f"{metrics['val_loss_mean']:.6f}")
+    print("Status: scaffold run complete (placeholder data)")
     return 0
 
 
