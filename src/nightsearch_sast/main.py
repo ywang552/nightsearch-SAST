@@ -30,7 +30,10 @@ def main() -> int:
     print("Project:", cfg.project_name)
     print("Train loss (last):", f"{metrics['train_loss_last']:.6f}")
     print("Validation loss (mean):", f"{metrics['val_loss_mean']:.6f}")
-    print("NNLS baseline validation loss (mean):", f"{metrics['nnls_val_loss_mean']:.6f}")
+    if "nnls_val_loss_mean" in metrics:
+        print("NNLS baseline validation loss (mean):", f"{metrics['nnls_val_loss_mean']:.6f}")
+    else:
+        print("NNLS baseline validation loss (mean): not available for this run")
     print("Status: scaffold run complete (synthetic dictionary baseline)")
     return 0
 
