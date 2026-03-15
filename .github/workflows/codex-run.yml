@@ -1,0 +1,65 @@
+name: Run Codex
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to check out before running Codex
+        required: false
+        default: ""
+      task:
+        description: Task or prompt for Codex to execute
+        required: true
+        type: string
+      dry_run:
+        description: Print the resolved command and exit without calling Codex
+        required: false
+        default: true
+        type: boolean
+      workspace_subdir:
+        description: Optional subdirectory inside the repo to use as the workspace
+        required: false
+        default: ""
+        type: string
+      codex_command:
+        description: Optional override for the command run inside the container
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  codex:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref != '' && inputs.ref || github.sha }}
+
+      - name: Build Codex runtime image
+        run: docker build --tag codex-cloud-repo .
+
+      - name: Resolve workspace path
+        id: workspace
+        shell: bash
+        run: |
+          subdir="${{ inputs.workspace_subdir }}"
+          if [[ -n "$subdir" ]]; then
+            echo "dir=/workspace/$subdir" >> "$GITHUB_OUTPUT"
+          else
+            echo "dir=/workspace" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Codex task
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          docker run --rm \
+            -e OPENAI_API_KEY \
+            -e CODEX_DRY_RUN=${{ inputs.dry_run }} \
+            -e CODEX_TASK="${{ inputs.task }}" \
+            -e CODEX_COMMAND="${{ inputs.codex_command }}" \
+            -e CODEX_WORKSPACE_DIR="${{ steps.workspace.outputs.dir }}" \
+            -v "${{ github.workspace }}:/workspace" \
+            codex-cloud-repo

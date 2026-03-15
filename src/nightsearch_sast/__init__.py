@@ -1,0 +1,1 @@
+"""nightsearch_sast package."""

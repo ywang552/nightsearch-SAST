@@ -1,0 +1,66 @@
+name: Validate Scaffold
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify required files exist
+        run: |
+          test -f requirements.txt
+          test -f configs/default.yaml
+          test -f src/nightsearch_sast/main.py
+          test -f tests/test_smoke.py
+          test -f .env.example
+          test -f Dockerfile
+          test -f scripts/run-codex.sh
+          test -f .github/workflows/codex-run.yml
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Run placeholder entrypoint
+        run: |
+          PYTHONPATH=src python -m nightsearch_sast.main --config configs/default.yaml
+
+      - name: Run smoke tests
+        run: |
+          PYTHONPATH=src pytest -q
+
+      - name: Lint shell entrypoint syntax
+        run: bash -n scripts/run-codex.sh
+
+      - name: Build Codex runtime image
+        run: docker build --tag codex-cloud-repo .
+
+      - name: Fail clearly when task input is missing
+        run: |
+          set +e
+          output="$(docker run --rm -v "$PWD:/workspace" codex-cloud-repo 2>&1)"
+          status=$?
+          printf '%s\n' "$output"
+          test "$status" -ne 0
+          printf '%s\n' "$output" | grep -F "Set CODEX_TASK or CODEX_TASK_FILE"
+
+      - name: Reach the entrypoint in dry-run mode
+        run: |
+          docker run --rm \
+            -e CODEX_DRY_RUN=1 \
+            -e CODEX_TASK="Inspect the repository and summarize the Python research scaffold." \
+            -v "$PWD:/workspace" \
+            codex-cloud-repo
