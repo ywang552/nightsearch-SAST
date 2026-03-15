@@ -1,0 +1,2 @@
+report/*.md merge=keepIncoming
+report/*.pdf merge=keepIncoming
