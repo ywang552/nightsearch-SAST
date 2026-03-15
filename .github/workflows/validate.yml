@@ -20,6 +20,7 @@ jobs:
           test -f configs/smoke.yaml
           test -f src/nightsearch_sast/main.py
           test -f tests/test_smoke.py
+          test -f reports/backlog.md
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -40,6 +41,14 @@ jobs:
       - name: Run fast tests (exclude slow)
         run: |
           PYTHONPATH=src pytest -q -m "not slow"
+
+      - name: Validate backlog format
+        run: |
+          python scripts/validate_backlog.py --path reports/backlog.md
+
+      - name: Validate report hygiene policy
+        run: |
+          python scripts/check_report_hygiene.py
 
       - name: Lint shell entrypoint syntax
         run: bash -n scripts/run-codex.sh

@@ -23,6 +23,8 @@ The real path expects NPZ files with aligned gene names and includes a tiny gene
 - `src/nightsearch_sast/evaluation/metrics.py`: unified evaluation metrics
 - `src/nightsearch_sast/training/train.py`: synthetic training + tensor-based training path
 - `reports/`: canonical location for experiment write-ups and archived research notes
+- `reports/backlog.md`: lightweight planning board for agent-driven task selection
+- `.github/agent-prompts/`: repo-specific prompts for planner/builder/reviewer/verifier/hygiene/research roles
 - `scripts/run_synthetic_baseline.py`: synthetic runner
 - `scripts/run_real_pipeline.py`: real runner writing metrics artifact
 - `configs/default.yaml`: synthetic default config
@@ -54,6 +56,46 @@ python -m pip install -r requirements.txt
 PYTHONPATH=src pytest -q
 PYTHONPATH=src python -m nightsearch_sast.main --config configs/default.yaml
 ```
+
+## Multi-agent operating layer
+
+This repository uses a lightweight, GitHub-native role flow designed for small, auditable changes.
+
+1. **Planner**
+   - Uses `reports/backlog.md` and repository summaries to pick the next ready task.
+   - Helper commands:
+     - `python scripts/summarize_repo_state.py`
+     - `python scripts/choose_next_task.py --backlog reports/backlog.md`
+2. **Builder**
+   - Implements one scoped task and runs fast checks.
+3. **Reviewer**
+   - Verifies scope control, code quality, and AGENTS policy alignment.
+4. **Verifier**
+   - Runs fast checks by default; runs broad checks when model/data paths changed.
+5. **Hygiene**
+   - Runs low-risk consistency checks for backlog and report policies.
+6. **Research**
+   - Maintains Markdown experiment notes, assumptions, and measured metrics.
+
+### Human-controlled gates
+
+- Pull requests remain human-reviewed and human-approved before merge.
+- Automation provides recommendations and validation signals, not autonomous merge decisions.
+
+### CI/workflow map
+
+- `validate.yml`: **fast PR checks** (smoke run, fast pytest, backlog/report hygiene checks).
+- `validate-full.yml`: **broader checks** on `main` pushes/manual dispatch.
+- `planner.yml`: manual planning helper that validates backlog and uploads summary/task recommendation artifacts.
+- `hygiene.yml`: manual/weekly low-cost repository hygiene checks.
+- `codex-run.yml`: manual Codex execution workflow for operator-provided tasks.
+
+### Triggering workflows
+
+- Fast PR checks: open/update a PR.
+- Planner assist: run **Planner Assist (Manual)** from GitHub Actions.
+- Hygiene checks: run **Hygiene Check** manually or let weekly schedule run.
+- Broad CI: push to `main` or run **Validate Full** manually.
 
 ## Current implemented scope
 
