@@ -48,7 +48,7 @@ Prepared a practical research plan in `report/research_plan.md` including:
 - `requirements.txt` (torch/transformers dependencies)
 - `README.md` (project/research usage documentation)
 
-### Report deliverables
+### Report deliverables   
 - `report/literature_review.md`
 - `report/research_plan.md`
 - `report/final_report.md`
@@ -68,7 +68,7 @@ Once those PDFs are present, the immediate next revision should add line-precise
 1. Zhang's file is intended to frame spot annotation/deconvolution as the core problem context.
 2. Youchuan Wang's statement is intended to motivate transformer/LLM-style exploration.
 3. Current code is intentionally a research scaffold with synthetic placeholder data.
-4. Real-data loaders and benchmark pipelines require dataset-specific integration work.
+4. Real-data load ers and benchmark pipelines require dataset-specific integration work.
 5. Some cited methods are provided as conceptual baselines rather than fully reimplemented in this commit.
 
 ## 6) What remains incomplete
