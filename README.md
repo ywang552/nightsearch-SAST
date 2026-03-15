@@ -22,9 +22,9 @@ The method is intentionally a scaffold, not a finalized algorithm.
 - `scripts/run_synthetic_baseline.py`: minimal experiment runner that writes JSON metrics
 - `configs/default.yaml`: default experiment configuration
 - `report/`
-  - `literature_review.md` and `.pdf`
-  - `research_plan.md` and `.pdf`
-  - `final_report.md` and `.pdf`
+  - `literature_review.md`
+  - `research_plan.md`
+  - `final_report.md`
 - `tests/test_smoke.py`: smoke tests
 
 ## Quickstart
@@ -51,18 +51,6 @@ python -m nightsearch_sast.main --config configs/default.yaml
 - Real loaders for Visium/Slide-seq/MERFISH datasets.
 - Full benchmark baselines (Tangram/cell2location/DestVI/SPOTlight reproductions).
 - End-to-end experiment tracking and reproducibility scripts.
-
-## PDF deliverables
-
-PDF versions of literature review, research plan, and final report are included in `report/`.
-
-If you want richer typography, regenerate with Pandoc locally:
-
-```bash
-pandoc report/literature_review.md -o report/literature_review.pdf
-pandoc report/research_plan.md -o report/research_plan.pdf
-pandoc report/final_report.md -o report/final_report.pdf
-```
 
 ## Merge setup
 
