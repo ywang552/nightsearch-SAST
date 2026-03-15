@@ -5,9 +5,9 @@ data:
   dataset_name: synthetic_dictionary
   train_path: data/train_placeholder.npz
   val_path: data/val_placeholder.npz
-  num_genes: 2000
+  num_genes: 256
   num_cell_types: 20
-  spot_feature_dim: 2000
+  spot_feature_dim: 256
   synthetic:
     train_samples: 256
     val_samples: 64
@@ -26,7 +26,7 @@ model:
   num_heads: 4
   num_layers: 1
   dropout: 0.1
-  ref_hidden_dim: 128
+  ref_hidden_dim: 256
 
 train:
   epochs: 2

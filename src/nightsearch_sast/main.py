@@ -1,4 +1,6 @@
-"""Entrypoint for initial cross-attention spot annotation experiments."""
+"""CLI entrypoint for running scaffold experiments."""
+
+from __future__ import annotations
 
 import argparse
 from pathlib import Path
@@ -8,14 +10,8 @@ from nightsearch_sast.training.train import train
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Run cross-attention scaffold training for spot annotation."
-    )
-    parser.add_argument(
-        "--config",
-        default="configs/default.yaml",
-        help="Path to a YAML config file.",
-    )
+    parser = argparse.ArgumentParser(description="Run cross-attention scaffold training for spot annotation.")
+    parser.add_argument("--config", default="configs/default.yaml", help="Path to a YAML config file.")
     return parser.parse_args()
 
 
@@ -34,6 +30,7 @@ def main() -> int:
     print("Project:", cfg.project_name)
     print("Train loss (last):", f"{metrics['train_loss_last']:.6f}")
     print("Validation loss (mean):", f"{metrics['val_loss_mean']:.6f}")
+    print("NNLS baseline validation loss (mean):", f"{metrics['nnls_val_loss_mean']:.6f}")
     print("Status: scaffold run complete (synthetic dictionary baseline)")
     return 0
 

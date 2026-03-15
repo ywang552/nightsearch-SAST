@@ -1,6 +1,6 @@
 # nightsearch-SAST
 
-Research scaffold for **spatial transcriptomics spot annotation** with a **cross-attention** model and an **NNLS** baseline.
+Research codebase for **spatial transcriptomics spot annotation** with a **cross-attention, reference-dictionary-guided** model and a simple **NNLS baseline**.
 
 ## What now works
 
@@ -50,18 +50,20 @@ python -m venv .venv
 . .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-pytest -q
+PYTHONPATH=src pytest -q
+PYTHONPATH=src python -m nightsearch_sast.main --config configs/default.yaml
 ```
 
-Run synthetic baseline:
+## Current implemented scope
 
-```bash
-python scripts/run_synthetic_baseline.py --config configs/default.yaml --output artifacts/synthetic_baseline_metrics.json
-```
+- Cross-attention scaffold with spot and reference encoders.
+- Synthetic dictionary data generation with configurable projection behavior.
+- KL-based training/evaluation pipeline.
+- NNLS comparator metric (`nnls_val_loss_mean`) for synthetic experiments.
+- Research planning docs for real-data integration and benchmark phases.
 
-Run real pipeline (cross-attention + NNLS):
+## Still missing
 
-```bash
-python scripts/create_real_example_data.py --output-dir data/processed/real
-python scripts/run_real_pipeline.py --config configs/real_example.yaml --output artifacts/real_pipeline_metrics.json
-```
+- Real data loaders (Visium/Slide-seq/MERFISH).
+- Reproduced external baselines (Tangram/cell2location/DestVI/SPOTlight).
+- Experiment tracking, deterministic dataset splits, and plotting pipeline.

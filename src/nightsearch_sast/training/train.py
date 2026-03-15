@@ -10,6 +10,7 @@ from torch import nn
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 
+from nightsearch_sast.baselines.nnls import nnls_predict_composition
 from nightsearch_sast.config import ExperimentConfig
 from nightsearch_sast.data.dataset import (
     SpotBatch,
@@ -57,7 +58,6 @@ class CompositionKLLoss(nn.Module):
         self.kl = nn.KLDivLoss(reduction="batchmean")
 
     def forward(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        # TODO: compare with alternatives (MSE, cross entropy on pseudo-labels, OT losses).
         return self.kl(torch.log(pred.clamp_min(1e-8)), target)
 
 
@@ -82,6 +82,7 @@ def make_dataloaders(config: ExperimentConfig) -> tuple[DataLoader, DataLoader]:
         dirichlet_alpha=synth.dirichlet_alpha,
         noise_std=synth.noise_std,
         reference_scale=synth.reference_scale,
+        use_random_projection=synth.use_random_projection,
         seed=config.seed,
     )
     val_ds = SyntheticDictionarySpotDataset(
@@ -92,21 +93,12 @@ def make_dataloaders(config: ExperimentConfig) -> tuple[DataLoader, DataLoader]:
         dirichlet_alpha=synth.dirichlet_alpha,
         noise_std=synth.noise_std,
         reference_scale=synth.reference_scale,
+        use_random_projection=synth.use_random_projection,
         seed=config.seed + 1,
     )
 
-    train_loader = DataLoader(
-        train_ds,
-        batch_size=config.train.batch_size,
-        shuffle=True,
-        collate_fn=collate_spot_batches,
-    )
-    val_loader = DataLoader(
-        val_ds,
-        batch_size=config.train.batch_size,
-        shuffle=False,
-        collate_fn=collate_spot_batches,
-    )
+    train_loader = DataLoader(train_ds, batch_size=config.train.batch_size, shuffle=True, collate_fn=collate_spot_batches)
+    val_loader = DataLoader(val_ds, batch_size=config.train.batch_size, shuffle=False, collate_fn=collate_spot_batches)
     return train_loader, val_loader
 
 
@@ -123,6 +115,17 @@ def evaluate(model: nn.Module, loader: DataLoader, criterion: nn.Module, device:
     return total / max(len(loader), 1)
 
 
+def evaluate_nnls_baseline(loader: DataLoader, criterion: nn.Module, device: torch.device) -> float:
+    total = 0.0
+    for batch in loader:
+        spot = batch.spot_features.to(device)
+        ref = batch.reference_embeddings.to(device)
+        target = batch.target_composition.to(device)
+        pred = nnls_predict_composition(spot, ref)
+        total += float(criterion(pred, target).item())
+    return total / max(len(loader), 1)
+
+
 def train(config: ExperimentConfig) -> dict[str, float]:
     set_seed(config.seed)
     device = torch.device(config.train.device)
@@ -130,11 +133,7 @@ def train(config: ExperimentConfig) -> dict[str, float]:
     model = build_model(config).to(device)
     train_loader, val_loader = make_dataloaders(config)
     criterion = CompositionKLLoss()
-    optimizer = AdamW(
-        model.parameters(),
-        lr=config.train.lr,
-        weight_decay=config.train.weight_decay,
-    )
+    optimizer = AdamW(model.parameters(), lr=config.train.lr, weight_decay=config.train.weight_decay)
 
     train_loss = 0.0
     for _epoch in range(config.train.epochs):
