@@ -8,13 +8,25 @@ import yaml
 
 
 @dataclass
+class SyntheticDataConfig:
+    """Parameters for synthetic dictionary-driven baseline data generation."""
+
+    train_samples: int = 256
+    val_samples: int = 64
+    dirichlet_alpha: float = 0.5
+    noise_std: float = 0.05
+    reference_scale: float = 1.0
+
+
+@dataclass
 class DataConfig:
-    dataset_name: str = "placeholder"
+    dataset_name: str = "synthetic_dictionary"
     train_path: str = "data/train_placeholder.npz"
     val_path: str = "data/val_placeholder.npz"
     num_genes: int = 2000
     num_cell_types: int = 20
     spot_feature_dim: int = 2000
+    synthetic: SyntheticDataConfig = field(default_factory=SyntheticDataConfig)
 
 
 @dataclass
@@ -44,7 +56,6 @@ class ExperimentConfig:
     train: TrainConfig = field(default_factory=TrainConfig)
 
 
-
 def load_config(path: str | Path) -> ExperimentConfig:
     """Load YAML into typed experiment config.
 
@@ -53,7 +64,9 @@ def load_config(path: str | Path) -> ExperimentConfig:
     with Path(path).open("r", encoding="utf-8") as f:
         raw: dict[str, Any] = yaml.safe_load(f) or {}
 
-    data = DataConfig(**raw.get("data", {}))
+    raw_data = dict(raw.get("data", {}))
+    synthetic = SyntheticDataConfig(**raw_data.pop("synthetic", {}))
+    data = DataConfig(**raw_data, synthetic=synthetic)
     model = ModelConfig(**raw.get("model", {}))
     train = TrainConfig(**raw.get("train", {}))
 

@@ -1,4 +1,4 @@
-"""Training loop skeleton for cross-attention spot annotation model."""
+"""Training scaffold for cross-attention spot annotation model."""
 
 from __future__ import annotations
 
@@ -11,7 +11,10 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader
 
 from nightsearch_sast.config import ExperimentConfig
-from nightsearch_sast.data.dataset import SpotAnnotationDataset, collate_spot_batches
+from nightsearch_sast.data.dataset import (
+    SyntheticDictionarySpotDataset,
+    collate_spot_batches,
+)
 from nightsearch_sast.models.cross_attention import CrossAttentionSpotAnnotator
 
 
@@ -45,17 +48,26 @@ def build_model(config: ExperimentConfig) -> CrossAttentionSpotAnnotator:
 
 
 def make_dataloaders(config: ExperimentConfig) -> tuple[DataLoader, DataLoader]:
-    train_ds = SpotAnnotationDataset(
-        num_samples=64,
+    synth = config.data.synthetic
+    train_ds = SyntheticDictionarySpotDataset(
+        num_samples=synth.train_samples,
         num_genes=config.data.spot_feature_dim,
         num_cell_types=config.data.num_cell_types,
         ref_dim=config.model.ref_hidden_dim,
+        dirichlet_alpha=synth.dirichlet_alpha,
+        noise_std=synth.noise_std,
+        reference_scale=synth.reference_scale,
+        seed=config.seed,
     )
-    val_ds = SpotAnnotationDataset(
-        num_samples=16,
+    val_ds = SyntheticDictionarySpotDataset(
+        num_samples=synth.val_samples,
         num_genes=config.data.spot_feature_dim,
         num_cell_types=config.data.num_cell_types,
         ref_dim=config.model.ref_hidden_dim,
+        dirichlet_alpha=synth.dirichlet_alpha,
+        noise_std=synth.noise_std,
+        reference_scale=synth.reference_scale,
+        seed=config.seed + 1,
     )
 
     train_loader = DataLoader(
@@ -71,6 +83,19 @@ def make_dataloaders(config: ExperimentConfig) -> tuple[DataLoader, DataLoader]:
         collate_fn=collate_spot_batches,
     )
     return train_loader, val_loader
+
+
+def evaluate(model: nn.Module, loader: DataLoader, criterion: nn.Module, device: torch.device) -> float:
+    model.eval()
+    total = 0.0
+    with torch.no_grad():
+        for batch in loader:
+            spot = batch.spot_features.to(device)
+            ref = batch.reference_embeddings.to(device)
+            target = batch.target_composition.to(device)
+            pred, _attn = model(spot, ref)
+            total += float(criterion(pred, target).item())
+    return total / max(len(loader), 1)
 
 
 def train(config: ExperimentConfig) -> dict[str, float]:
@@ -102,15 +127,5 @@ def train(config: ExperimentConfig) -> dict[str, float]:
             optimizer.step()
             train_loss = float(loss.item())
 
-    model.eval()
-    val_loss = 0.0
-    with torch.no_grad():
-        for batch in val_loader:
-            spot = batch.spot_features.to(device)
-            ref = batch.reference_embeddings.to(device)
-            target = batch.target_composition.to(device)
-            pred, _attn = model(spot, ref)
-            val_loss += float(criterion(pred, target).item())
-
-    val_loss /= max(len(val_loader), 1)
+    val_loss = evaluate(model, val_loader, criterion, device)
     return {"train_loss_last": train_loss, "val_loss_mean": val_loss}
