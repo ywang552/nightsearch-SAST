@@ -1,0 +1,29 @@
+name: Hygiene Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * 1"
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate backlog structure
+        run: python scripts/validate_backlog.py --path reports/backlog.md
+
+      - name: Check report hygiene
+        run: python scripts/check_report_hygiene.py
+
+      - name: Ensure codex entrypoint is syntactically valid
+        run: bash -n scripts/run-codex.sh

@@ -1,0 +1,35 @@
+name: Planner Assist (Manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  planner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate backlog
+        run: python scripts/validate_backlog.py --path reports/backlog.md
+
+      - name: Summarize repository state
+        run: python scripts/summarize_repo_state.py > planner-repo-summary.md
+
+      - name: Recommend next task
+        run: python scripts/choose_next_task.py --backlog reports/backlog.md > planner-next-task.md
+
+      - name: Upload planner artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: planner-output
+          path: |
+            planner-repo-summary.md
+            planner-next-task.md
