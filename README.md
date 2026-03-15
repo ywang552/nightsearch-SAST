@@ -62,3 +62,21 @@ pandoc report/literature_review.md -o report/literature_review.pdf
 pandoc report/research_plan.md -o report/research_plan.pdf
 pandoc report/final_report.md -o report/final_report.pdf
 ```
+
+## Merge setup
+
+Run this one-time local Git configuration so merges of generated report files keep the incoming version.
+
+For Git Bash or macOS/Linux:
+
+```bash
+git config merge.keepIncoming.name "keep incoming version"
+git config merge.keepIncoming.driver "cp %B %A"
+```
+
+For Windows PowerShell:
+
+```powershell
+git config merge.keepIncoming.name "keep incoming version"
+git config merge.keepIncoming.driver "powershell -Command Copy-Item '%B' '%A' -Force"
+```
