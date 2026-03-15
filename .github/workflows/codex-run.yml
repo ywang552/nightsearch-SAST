@@ -4,25 +4,25 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: Git ref to check out before running Codex
+        description: Git ref to check out
         required: false
-        default: ""
+        default: "main"  # <--- Fix 1: Change default from "" to "main"
       task:
         description: Task or prompt for Codex to execute
         required: true
         type: string
       dry_run:
-        description: Print the resolved command and exit without calling Codex
+        description: Print the resolved command and exit
         required: false
         default: true
         type: boolean
       workspace_subdir:
-        description: Optional subdirectory inside the repo to use as the workspace
+        description: Optional subdirectory
         required: false
         default: ""
         type: string
       codex_command:
-        description: Optional override for the command run inside the container
+        description: Optional override for the command
         required: false
         default: ""
         type: string
@@ -35,7 +35,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref != '' && inputs.ref || github.sha }}
+          # Fix 2: Explicitly prioritize the input ref or main
+          ref: ${{ inputs.ref || 'main' }}
 
       - name: Build Codex runtime image
         run: docker build --tag codex-cloud-repo .
