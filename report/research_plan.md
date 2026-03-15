@@ -4,9 +4,9 @@
 
 Given a spatial transcriptomics dataset with spot-level observed expression vectors and a reference dictionary derived from annotated single-cell data, predict a **cell-type composition distribution** for each spot.
 
-- Let \(x_s \in \mathbb{R}^G\) be observed spot expression for spot \(s\).
-- Let dictionary entries \(r_c \in \mathbb{R}^{G_r}\) represent cell type \(c\) from reference data.
-- Goal: predict \(\hat{y}_s \in \Delta^{C-1}\), where \(C\) is number of cell types.
+- Let $$x_s \in \mathbb{R}^G$$ be observed spot expression for spot $$s$$.
+- Let dictionary entries $$r_c \in \mathbb{R}^{G_r}$$ represent cell type $$c$$ from reference data.
+- Goal: predict $$\hat{y}_s \in \Delta^{C-1}$$, where $$C$$ is number of cell types.
 
 This framing follows Zhang's problem context (spot annotation/deconvolution) and extends it with a transformer-inspired cross-attention architecture motivated by Youchuan Wang's forward direction.
 
@@ -20,9 +20,9 @@ A modular model with four blocks:
 
 ## 3) Query, Key, Value mapping
 
-- **Query (Q):** encoded spot representation \(q_s\).
-- **Key (K):** encoded reference prototypes \(k_c\).
-- **Value (V):** encoded reference prototypes \(v_c\) (same or separate projection from keys).
+- **Query (Q):** encoded spot representation $$q_s$$.
+- **Key (K):** encoded reference prototypes $$k_c$$.
+- **Value (V):** encoded reference prototypes $$v_c$$ (same or separate projection from keys).
 
 Attention weights provide interpretable affinity between each spot and reference cell types.
 
@@ -37,7 +37,7 @@ Candidate choices:
 ## 5) Output definition
 
 Primary output:
-- \(\hat{y}_s\): compositional distribution over cell types for each spot.
+- $$\hat{y}_s$$: compositional distribution over cell types for each spot.
 
 Optional secondary outputs:
 - Uncertainty estimates (Dirichlet concentration / variance head).
