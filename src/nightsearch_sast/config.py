@@ -20,6 +20,17 @@ class SyntheticDataConfig:
 
 
 @dataclass
+class RealDataConfig:
+    """Parameters and file paths for real spatial transcriptomics experiments."""
+
+    spots_npz_path: str = "data/processed/real/spots.npz"
+    reference_npz_path: str = "data/processed/real/reference_cells.npz"
+    target_composition_npz_path: str = ""
+    train_fraction: float = 0.8
+    min_shared_genes: int = 25
+
+
+@dataclass
 class DataConfig:
     dataset_name: str = "synthetic_dictionary"
     train_path: str = "data/train_placeholder.npz"
@@ -28,6 +39,7 @@ class DataConfig:
     num_cell_types: int = 20
     spot_feature_dim: int = 256
     synthetic: SyntheticDataConfig = field(default_factory=SyntheticDataConfig)
+    real: RealDataConfig = field(default_factory=RealDataConfig)
 
 
 @dataclass
@@ -64,7 +76,8 @@ def load_config(path: str | Path) -> ExperimentConfig:
 
     raw_data = dict(raw.get("data", {}))
     synthetic = SyntheticDataConfig(**raw_data.pop("synthetic", {}))
-    data = DataConfig(**raw_data, synthetic=synthetic)
+    real = RealDataConfig(**raw_data.pop("real", {}))
+    data = DataConfig(**raw_data, synthetic=synthetic, real=real)
     model = ModelConfig(**raw.get("model", {}))
     train = TrainConfig(**raw.get("train", {}))
 

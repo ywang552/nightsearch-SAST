@@ -14,7 +14,12 @@ data:
     dirichlet_alpha: 0.5
     noise_std: 0.05
     reference_scale: 1.0
-    use_random_projection: false
+  real:
+    spots_npz_path: data/processed/real/spots.npz
+    reference_npz_path: data/processed/real/reference_cells.npz
+    target_composition_npz_path: ""
+    train_fraction: 0.8
+    min_shared_genes: 25
 
 model:
   d_model: 128

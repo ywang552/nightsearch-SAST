@@ -1,4 +1,4 @@
-"""Simple non-negative least squares baseline for spot composition inference."""
+"""Simple non-negative least squares baseline solved with projected gradient descent."""
 
 from __future__ import annotations
 
