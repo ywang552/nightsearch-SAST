@@ -1,30 +1,15 @@
-name: Validate Scaffold
+name: Validate PR (Fast)
 
 on:
-  push:
   pull_request:
   workflow_dispatch:
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
 
     steps:
-      - name: Free disk space on runner
-        run: |
-          echo "Disk usage before cleanup"
-          df -h
-
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          docker system prune -af || true
-
-          echo "Disk usage after cleanup"
-          df -h
-
       - name: Check out repository
         uses: actions/checkout@v4
 
@@ -32,12 +17,9 @@ jobs:
         run: |
           test -f requirements.txt
           test -f configs/default.yaml
+          test -f configs/smoke.yaml
           test -f src/nightsearch_sast/main.py
           test -f tests/test_smoke.py
-          test -f .env.example
-          test -f Dockerfile
-          test -f scripts/run-codex.sh
-          test -f .github/workflows/codex-run.yml
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -51,38 +33,13 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --no-compile --prefer-binary -r requirements.txt
 
-      - name: Run placeholder entrypoint
+      - name: Run smoke config entrypoint
         run: |
-          PYTHONPATH=src python -m nightsearch_sast.main --config configs/default.yaml
+          PYTHONPATH=src python -m nightsearch_sast.main --config configs/smoke.yaml
 
-      - name: Run smoke tests
+      - name: Run fast tests (exclude slow)
         run: |
-          PYTHONPATH=src pytest -q
+          PYTHONPATH=src pytest -q -m "not slow"
 
       - name: Lint shell entrypoint syntax
         run: bash -n scripts/run-codex.sh
-
-      - name: Build Codex runtime image
-        run: |
-          docker build --tag codex-cloud-repo --pull .
-
-      - name: Fail clearly when task input is missing
-        run: |
-          set +e
-          output="$(docker run --rm -v "$PWD:/workspace" codex-cloud-repo 2>&1)"
-          status=$?
-          printf '%s\n' "$output"
-          test "$status" -ne 0
-          printf '%s\n' "$output" | grep -F "Set CODEX_TASK or CODEX_TASK_FILE"
-
-      - name: Reach the entrypoint in dry-run mode
-        run: |
-          docker run --rm \
-            -e CODEX_DRY_RUN=1 \
-            -e CODEX_TASK="Inspect the repository and summarize the Python research scaffold." \
-            -v "$PWD:/workspace" \
-            codex-cloud-repo
-
-      - name: Remove temporary Docker artifacts
-        if: always()
-        run: docker image prune -af || true

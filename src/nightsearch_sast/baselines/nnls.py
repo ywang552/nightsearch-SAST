@@ -57,3 +57,30 @@ def nnls_predict_composition(
             comp.copy_(_project_to_simplex(comp))
 
     return comp.detach()
+
+
+
+def run_nnls_baseline(
+    spot_matrix: torch.Tensor,
+    reference_dictionary: torch.Tensor,
+    num_steps: int = 150,
+    lr: float = 5e-2,
+) -> torch.Tensor:
+    """Apply NNLS baseline for a shared reference dictionary across all spots.
+
+    Args:
+        spot_matrix: Spot expression matrix with shape [n_spots, n_genes].
+        reference_dictionary: Reference dictionary with shape [n_cell_types, n_genes].
+        num_steps: Optimization steps for projected gradient descent.
+        lr: Gradient step size.
+
+    Returns:
+        Predicted compositions with shape [n_spots, n_cell_types].
+    """
+    if spot_matrix.dim() != 2 or reference_dictionary.dim() != 2:
+        raise ValueError("Expected spot_matrix [S,G] and reference_dictionary [C,G].")
+    if spot_matrix.shape[1] != reference_dictionary.shape[1]:
+        raise ValueError("Spot and reference dictionary must share gene dimension.")
+
+    batch_reference = reference_dictionary.unsqueeze(0).expand(spot_matrix.shape[0], -1, -1)
+    return nnls_predict_composition(spot_matrix, batch_reference, num_steps=num_steps, lr=lr)

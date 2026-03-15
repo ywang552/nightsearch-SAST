@@ -152,7 +152,12 @@ def train(config: ExperimentConfig) -> dict[str, float]:
             train_loss = float(loss.item())
 
     val_loss = evaluate(model, val_loader, criterion, device)
-    return {"train_loss_last": train_loss, "val_loss_mean": val_loss}
+    nnls_val_loss = evaluate_nnls_baseline(val_loader, criterion, device)
+    return {
+        "train_loss_last": train_loss,
+        "val_loss_mean": val_loss,
+        "nnls_val_loss_mean": nnls_val_loss,
+    }
 
 
 def train_cross_attention_from_tensors(
