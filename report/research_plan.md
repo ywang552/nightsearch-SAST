@@ -117,6 +117,7 @@ Secondary:
 ### Phase 0 (done in this repo scaffold)
 - Modular code skeleton (dataset/model/training/config/report).
 - Minimal runnable placeholder with synthetic data.
+- Added NNLS-style baseline comparator on synthetic data.
 
 ### Phase 1 (2-4 weeks)
 - Integrate one real dataset loader and one reference construction pipeline.

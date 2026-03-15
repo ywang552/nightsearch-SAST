@@ -16,16 +16,7 @@ class SpotBatch:
 
 
 class SyntheticDictionarySpotDataset(Dataset[SpotBatch]):
-    """Synthetic spot dataset with a fixed cell-type reference dictionary.
-
-    The per-spot composition is sampled from a Dirichlet distribution and mixed through
-    the reference dictionary to produce spot-level expression features.
-
-    Shapes:
-    - reference_dictionary: [num_cell_types, ref_dim]
-    - spot_features: [num_genes]
-    - target_composition: [num_cell_types]
-    """
+    """Synthetic spot dataset with a fixed cell-type reference dictionary."""
 
     def __init__(
         self,
@@ -36,13 +27,10 @@ class SyntheticDictionarySpotDataset(Dataset[SpotBatch]):
         dirichlet_alpha: float,
         noise_std: float,
         reference_scale: float = 1.0,
+        use_random_projection: bool = False,
         seed: int = 42,
     ) -> None:
         self.num_samples = num_samples
-        self.num_genes = num_genes
-        self.num_cell_types = num_cell_types
-        self.ref_dim = ref_dim
-        self.noise_std = noise_std
 
         generator = torch.Generator().manual_seed(seed)
         self.reference_dictionary = torch.rand(
@@ -51,15 +39,16 @@ class SyntheticDictionarySpotDataset(Dataset[SpotBatch]):
             generator=generator,
         ) * reference_scale
 
-        concentration = torch.full(
-            (num_cell_types,),
-            fill_value=max(dirichlet_alpha, 1e-3),
-        )
+        concentration = torch.full((num_cell_types,), fill_value=max(dirichlet_alpha, 1e-3))
         dirichlet = torch.distributions.Dirichlet(concentration)
-
         compositions = dirichlet.sample((num_samples,))
+
         projected_reference = self.reference_dictionary
         if ref_dim != num_genes:
+            if not use_random_projection:
+                raise ValueError(
+                    "Synthetic data requires ref_dim == num_genes unless use_random_projection=True."
+                )
             projector = torch.rand(ref_dim, num_genes, generator=generator)
             projected_reference = projected_reference @ projector
 

@@ -1,75 +1,45 @@
-# Final Report: Cross-Attention Direction for Spatial Transcriptomics Spot Annotation
+# Final Report: Current State of Cross-Attention Spot Annotation Scaffold
 
-## 1) Literature reviewed
+## 1) Scope completed in code
 
-Completed a focused, recent literature review centered on:
-- Spot annotation/deconvolution in spatial transcriptomics (Tangram, cell2location, DestVI, SPOTlight, Stereoscope).
-- Transformer/LLM-style models in transcriptomics (scBERT, Geneformer, scGPT, xTrimoGene).
-- Reference-guided and dictionary-guided prediction ideas relevant to cross-attention.
+Implemented and runnable today:
 
-The review distinguishes:
-- **Verified literature findings** from published papers/preprints.
-- **Speculative but plausible research hypotheses** for our proposed architecture.
+1. **Cross-attention scaffold model** for spot composition prediction.
+2. **Synthetic dictionary dataset** with Dirichlet-composition sampling.
+3. **Config-driven training loop** with compositional KL loss.
+4. **NNLS baseline comparator** using projected-gradient simplex-constrained fitting.
+5. **Smoke tests** covering entrypoint, model shape, synthetic data validity, and NNLS output constraints.
 
-See `report/literature_review.md` for paper-by-paper details.
+## 2) What changed in this iteration
 
-## 2) Research plan produced
+- Added `src/nightsearch_sast/baselines/nnls.py` and package export.
+- Updated training to report both model validation loss and NNLS validation loss.
+- Tightened synthetic data behavior so dimension mismatch requires explicit random projection.
+- Aligned default config dimensions (`spot_feature_dim == ref_hidden_dim`) for a coherent synthetic setting.
+- Updated tests and README to match actual code behavior.
 
-Prepared a practical research plan in `report/research_plan.md` including:
-- Formal problem setup.
-- Proposed architecture and explicit Query/Key/Value assignments.
-- Dictionary representation strategies.
-- Output, losses, and supervision modes.
-- Dataset candidates, baseline methods, metrics.
-- Ablation plan, risks, open questions, and phased roadmap.
+## 3) Why this is the right next step
 
-## 3) Code files created/modified
+Before integrating real datasets, the project needed a meaningful comparator and a coherent synthetic setup. This iteration provides:
 
-### Core scaffold added
-- `src/nightsearch_sast/config.py`
-- `src/nightsearch_sast/data/dataset.py`
-- `src/nightsearch_sast/models/cross_attention.py`
-- `src/nightsearch_sast/training/train.py`
-- package `__init__` files under `data/`, `models/`, `training/`, `utils/`
+- A **non-deep baseline** to prevent evaluating cross-attention in isolation.
+- A **clearer synthetic identifiability assumption** (or explicit projection opt-in).
+- Better **signal for progress** through additional metrics and tests.
 
-### Existing files updated
-- `src/nightsearch_sast/main.py` (now runs scaffold training)
-- `configs/default.yaml` (experiment structure)
-- `tests/test_smoke.py` (entrypoint + model shape tests)
-- `requirements.txt` (torch/transformers dependencies)
-- `README.md` (project/research usage documentation)
+## 4) Current limitations
 
-### Report deliverables
-- `report/literature_review.md`
-- `report/research_plan.md`
-- `report/final_report.md`
-- PDF counterparts in `report/` (generated from markdown source)
+Still missing for full research execution:
 
-## 4) Assumptions made
+1. Real spatial transcriptomics data loaders and preprocessing.
+2. Reference dictionary construction from real annotated single-cell data.
+3. Baseline reproductions beyond NNLS (SPOTlight/cell2location/DestVI/Tangram).
+4. Experiment tracking + visualization + reproducible study scripts.
 
-1. Zhang's paper provides baseline framing for spot annotation/deconvolution.
-2. Youchuan Wang's statement motivates transformer/LLM-style exploration.
-3. Current code is intentionally a research scaffold with synthetic placeholder data.
-4. Real-data loaders and benchmark pipelines require dataset-specific integration work.
-5. Some cited methods are provided as conceptual baselines rather than fully reimplemented in this commit.
+## 5) Recommended immediate next task
 
-## 5) What remains incomplete
+Implement a first real-data pipeline (e.g., one public Visium dataset) that outputs:
 
-1. No real spatial transcriptomics dataset ingestion yet.
-2. No full reproduction pipelines for Tangram/cell2location/DestVI baselines.
-3. No hyperparameter search, experiment tracking, or figure-generation scripts.
-4. No biological validation (marker-level interpretation, histology-aligned analyses).
-5. No manuscript-quality benchmarking yet.
-
-## 6) Recommended next steps
-
-1. Implement one production data loader (e.g., Visium + paired reference).
-2. Add at least one simple non-deep baseline (NNLS/NMF).
-3. Add experiment tracking (e.g., wandb or MLflow) and deterministic splits.
-4. Run initial ablations: no-attention vs cross-attention; single vs multi-prototype dictionary.
-5. Evaluate domain-shift robustness and uncertainty calibration.
-6. Iterate architecture toward richer reference representations and ontology constraints.
-
-## PDF rendering note
-
-In this environment, PDFs were generated programmatically from the markdown text to satisfy deliverable requirements. If richer formatting is needed, render the markdown with Pandoc in a local environment.
+- spot expression matrix,
+- matched reference dictionary,
+- train/validation split,
+- shared metric interface reused by cross-attention and NNLS.

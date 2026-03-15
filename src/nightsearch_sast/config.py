@@ -16,6 +16,7 @@ class SyntheticDataConfig:
     dirichlet_alpha: float = 0.5
     noise_std: float = 0.05
     reference_scale: float = 1.0
+    use_random_projection: bool = False
 
 
 @dataclass
@@ -23,17 +24,17 @@ class DataConfig:
     dataset_name: str = "synthetic_dictionary"
     train_path: str = "data/train_placeholder.npz"
     val_path: str = "data/val_placeholder.npz"
-    num_genes: int = 2000
+    num_genes: int = 256
     num_cell_types: int = 20
-    spot_feature_dim: int = 2000
+    spot_feature_dim: int = 256
     synthetic: SyntheticDataConfig = field(default_factory=SyntheticDataConfig)
 
 
 @dataclass
 class ModelConfig:
-    d_model: int = 256
-    num_heads: int = 8
-    num_layers: int = 2
+    d_model: int = 128
+    num_heads: int = 4
+    num_layers: int = 1
     dropout: float = 0.1
     ref_hidden_dim: int = 256
 
@@ -57,10 +58,7 @@ class ExperimentConfig:
 
 
 def load_config(path: str | Path) -> ExperimentConfig:
-    """Load YAML into typed experiment config.
-
-    TODO: add stricter schema validation (e.g., pydantic) when configs stabilize.
-    """
+    """Load YAML into typed experiment config."""
     with Path(path).open("r", encoding="utf-8") as f:
         raw: dict[str, Any] = yaml.safe_load(f) or {}
 

@@ -1,31 +1,27 @@
 # nightsearch-SAST
 
-Research scaffold for **spatial transcriptomics spot annotation** with a proposed **cross-attention, reference-dictionary-guided** architecture.
+Research codebase for **spatial transcriptomics spot annotation** with a **cross-attention, reference-dictionary-guided** model and a simple **NNLS baseline**.
 
 ## Project goal
 
-This repository now serves as a serious starting point for a research program where:
-- **Query** comes from observed spatial spot information,
-- **Key/Value** come from a biological reference dictionary (e.g., cell-type signatures),
-- model output is a **cell-type composition distribution per spot**.
-
-The method is intentionally a scaffold, not a finalized algorithm.
+This repository targets spot-level cell type composition estimation where:
+- **Query** comes from observed spot expression.
+- **Key/Value** come from a reference cell type dictionary.
+- Output is a **cell-type composition distribution per spot**.
 
 ## Repository structure
 
 - `src/nightsearch_sast/`
-  - `config.py`: typed experiment config loader
-  - `data/dataset.py`: synthetic dictionary dataset + collate
-  - `models/cross_attention.py`: spot encoder, reference encoder, cross-attention block, output head
-  - `training/train.py`: training skeleton + loss + dataloaders
-  - `main.py`: runnable experiment entrypoint
-- `scripts/run_synthetic_baseline.py`: minimal experiment runner that writes JSON metrics
-- `configs/default.yaml`: default experiment configuration
-- `report/`
-  - `literature_review.md`
-  - `research_plan.md`
-  - `final_report.md`
-- `tests/test_smoke.py`: smoke tests
+  - `config.py`: typed config loader.
+  - `data/dataset.py`: synthetic dictionary dataset + collate.
+  - `models/cross_attention.py`: cross-attention model scaffold.
+  - `baselines/nnls.py`: projected-gradient NNLS baseline.
+  - `training/train.py`: training loop and validation metrics.
+  - `main.py`: CLI entrypoint.
+- `scripts/run_synthetic_baseline.py`: run experiment and write JSON metrics.
+- `configs/default.yaml`: default experiment settings.
+- `report/`: literature review, research plan, and current status report.
+- `tests/test_smoke.py`: smoke tests for package and baseline.
 
 ## Quickstart
 
@@ -34,38 +30,20 @@ python -m venv .venv
 . .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-pytest -q
-python -m nightsearch_sast.main --config configs/default.yaml
+PYTHONPATH=src pytest -q
+PYTHONPATH=src python -m nightsearch_sast.main --config configs/default.yaml
 ```
 
-## What is implemented now
+## Current implemented scope
 
-- Modular model skeleton for cross-attention spot annotation.
-- Synthetic dictionary-driven dataset baseline with Dirichlet composition sampling.
-- Training loop skeleton with compositional KL loss.
-- Config-driven experiment entrypoint.
-- Research documentation: literature review, research plan, final report.
+- Cross-attention scaffold with spot and reference encoders.
+- Synthetic dictionary data generation with configurable projection behavior.
+- KL-based training/evaluation pipeline.
+- NNLS comparator metric (`nnls_val_loss_mean`) for synthetic experiments.
+- Research planning docs for real-data integration and benchmark phases.
 
-## What is not implemented yet
+## Still missing
 
-- Real loaders for Visium/Slide-seq/MERFISH datasets.
-- Full benchmark baselines (Tangram/cell2location/DestVI/SPOTlight reproductions).
-- End-to-end experiment tracking and reproducibility scripts.
-
-## Merge setup
-
-Run this one-time local Git configuration so merges of generated report files keep the incoming version.
-
-For Git Bash or macOS/Linux:
-
-```bash
-git config merge.keepIncoming.name "keep incoming version"
-git config merge.keepIncoming.driver "cp %B %A"
-```
-
-For Windows PowerShell:
-
-```powershell
-git config merge.keepIncoming.name "keep incoming version"
-git config merge.keepIncoming.driver "powershell -Command Copy-Item '%B' '%A' -Force"
-```
+- Real data loaders (Visium/Slide-seq/MERFISH).
+- Reproduced external baselines (Tangram/cell2location/DestVI/SPOTlight).
+- Experiment tracking, deterministic dataset splits, and plotting pipeline.
