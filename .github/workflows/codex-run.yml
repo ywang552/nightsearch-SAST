@@ -6,7 +6,7 @@ on:
       ref:
         description: Git ref to check out
         required: false
-        default: "main"  # <--- Fix 1: Change default from "" to "main"
+        default: "main"
       task:
         description: Task or prompt for Codex to execute
         required: true
@@ -30,16 +30,30 @@ on:
 jobs:
   codex:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
+      - name: Free disk space on runner
+        run: |
+          echo "Disk usage before cleanup"
+          df -h
+
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          docker system prune -af || true
+
+          echo "Disk usage after cleanup"
+          df -h
+
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          # Fix 2: Explicitly prioritize the input ref or main
           ref: ${{ inputs.ref || 'main' }}
 
       - name: Build Codex runtime image
-        run: docker build --tag codex-cloud-repo .
+        run: docker build --tag codex-cloud-repo --pull .
 
       - name: Resolve workspace path
         id: workspace
@@ -64,3 +78,7 @@ jobs:
             -e CODEX_WORKSPACE_DIR="${{ steps.workspace.outputs.dir }}" \
             -v "${{ github.workspace }}:/workspace" \
             codex-cloud-repo
+
+      - name: Remove temporary Docker artifacts
+        if: always()
+        run: docker image prune -af || true
