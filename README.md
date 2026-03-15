@@ -22,6 +22,7 @@ The real path expects NPZ files with aligned gene names and includes a tiny gene
 - `src/nightsearch_sast/baselines/nnls.py`: NNLS baseline (projected gradient)
 - `src/nightsearch_sast/evaluation/metrics.py`: unified evaluation metrics
 - `src/nightsearch_sast/training/train.py`: synthetic training + tensor-based training path
+- `reports/`: canonical location for experiment write-ups and archived research notes
 - `scripts/run_synthetic_baseline.py`: synthetic runner
 - `scripts/run_real_pipeline.py`: real runner writing metrics artifact
 - `configs/default.yaml`: synthetic default config
@@ -64,10 +65,10 @@ PYTHONPATH=src python -m nightsearch_sast.main --config configs/default.yaml
 
 ## Still missing
 
-- Real data loaders (Visium/Slide-seq/MERFISH).
+- Native adapters for named public real-data sources (e.g., direct Visium/Slide-seq/MERFISH ingestion beyond NPZ bundles).
 - Reproduced external baselines (Tangram/cell2location/DestVI/SPOTlight).
 - Experiment tracking, deterministic dataset splits, and plotting pipeline.
 
 ## Reporting docs note
 
-Historical notes exist under both `report/` and `reports/`. For current baseline experiment output and updates, treat `reports/` as the canonical location in this phase.
+`reports/` is the canonical location for experiment output and research notes. Historical planning documents are kept under `reports/archive/`.
