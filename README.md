@@ -63,6 +63,7 @@ This repository uses a lightweight, GitHub-native role flow designed for small, 
 
 1. **Planner**
    - Uses `reports/backlog.md` and repository summaries to pick the next ready task.
+   - Skips stale `todo` backlog items when success criteria are already satisfied by obvious repo evidence (e.g., required script already referenced in a workflow, or README troubleshooting section already present).
    - Helper commands:
      - `python scripts/summarize_repo_state.py`
      - `python scripts/choose_next_task.py --backlog reports/backlog.md`
