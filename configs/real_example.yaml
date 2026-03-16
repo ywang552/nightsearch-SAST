@@ -1,4 +1,4 @@
-project_name: nightsearch-sast-real
+project_name: nightsearch-sast-real-dlpfc
 seed: 42
 
 data:
@@ -7,10 +7,13 @@ data:
   num_cell_types: 4
   spot_feature_dim: 40
   real:
+    dataset_family: dlpfc_visium
+    bundle_npz_path: data/processed/real/dlpfc_151673_bundle.npz
     spots_npz_path: data/processed/real/spots.npz
     reference_npz_path: data/processed/real/reference_cells.npz
     target_composition_npz_path: data/processed/real/spot_composition.npz
     train_fraction: 0.8
+    validation_fraction: 0.2
     min_shared_genes: 25
 
 model:

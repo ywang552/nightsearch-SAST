@@ -12,6 +12,8 @@ from torch.utils.data import DataLoader
 
 from nightsearch_sast.baselines.nnls import nnls_predict_composition
 from nightsearch_sast.config import ExperimentConfig
+from nightsearch_sast.data.split import DataSplit, make_spot_split
+from nightsearch_sast.evaluation.metrics import evaluate_predictions
 from nightsearch_sast.data.dataset import (
     SpotBatch,
     SyntheticDictionarySpotDataset,
@@ -165,17 +167,20 @@ def train_cross_attention_from_tensors(
     spot_matrix: torch.Tensor,
     reference_dictionary: torch.Tensor,
     target_composition: torch.Tensor,
+    split: DataSplit | None = None,
 ) -> tuple[torch.Tensor, dict[str, float]]:
-    """Train cross-attention model from in-memory tensors and return predictions."""
+    """Train cross-attention model from aligned tensors and return full predictions + train metrics."""
     set_seed(config.seed)
     device = torch.device(config.train.device)
 
     n_spots = spot_matrix.shape[0]
-    n_train = max(1, int(n_spots * config.data.real.train_fraction))
-    indices = torch.randperm(n_spots)
-    train_idx, val_idx = indices[:n_train], indices[n_train:]
-    if val_idx.numel() == 0:
-        val_idx = train_idx
+    if split is None:
+        split = make_spot_split(
+            num_spots=n_spots,
+            validation_fraction=config.data.real.validation_fraction,
+            seed=config.seed,
+        )
+    train_idx, val_idx = split.train_indices, split.validation_indices
 
     model = CrossAttentionSpotAnnotator(
         spot_dim=spot_matrix.shape[1],
@@ -215,3 +220,32 @@ def train_cross_attention_from_tensors(
         pred, _ = model(spot_matrix.to(device), ref)
 
     return pred.cpu(), {"train_loss_last": train_loss, "val_loss_mean": val_loss}
+
+
+def run_cross_attention_with_metrics(
+    config: ExperimentConfig,
+    spot_matrix: torch.Tensor,
+    reference_dictionary: torch.Tensor,
+    target_composition: torch.Tensor,
+    split: DataSplit,
+    supervised_target: torch.Tensor | None,
+) -> tuple[torch.Tensor, dict[str, object]]:
+    """Train/evaluate cross-attention on real tensors with shared metric schema."""
+    pred, train_metrics = train_cross_attention_from_tensors(
+        config=config,
+        spot_matrix=spot_matrix,
+        reference_dictionary=reference_dictionary,
+        target_composition=target_composition,
+        split=split,
+    )
+
+    val_idx = split.validation_indices
+    eval_metrics = evaluate_predictions(
+        method="cross_attention",
+        split="validation",
+        predicted_composition=pred[val_idx],
+        reference_dictionary=reference_dictionary,
+        spot_matrix=spot_matrix[val_idx],
+        target_composition=supervised_target[val_idx] if supervised_target is not None else None,
+    )
+    return pred, {**train_metrics, **eval_metrics}
