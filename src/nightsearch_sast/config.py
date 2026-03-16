@@ -23,10 +23,13 @@ class SyntheticDataConfig:
 class RealDataConfig:
     """Parameters and file paths for real spatial transcriptomics experiments."""
 
+    dataset_family: str = "dlpfc_visium"
+    bundle_npz_path: str = ""
     spots_npz_path: str = "data/processed/real/spots.npz"
     reference_npz_path: str = "data/processed/real/reference_cells.npz"
     target_composition_npz_path: str = ""
     train_fraction: float = 0.8
+    validation_fraction: float = 0.2
     min_shared_genes: int = 25
 
 

@@ -1,4 +1,4 @@
-"""Create a tiny NPZ bundle mimicking one real spatial transcriptomics experiment."""
+"""Create tiny NPZ assets mimicking one real DLPFC-style spatial transcriptomics experiment."""
 
 from __future__ import annotations
 
@@ -47,7 +47,11 @@ def main() -> int:
         composition @ reference_dictionary + rng.normal(0, 0.03, size=(24, num_genes))
     ).clip(min=0).astype(np.float32)
 
-    np.savez(output_dir / "spots.npz", X=spot_matrix, gene_names=genes)
+    spot_ids = np.array([f"AAACAATCTACTAG-{i:02d}" for i in range(24)], dtype=object)
+    sample_ids = np.array(["151673"] * 24, dtype=object)
+    region_labels = np.array(["L2", "L3", "L4", "WM"] * 6, dtype=object)
+
+    np.savez(output_dir / "spots.npz", X=spot_matrix, gene_names=genes, spot_ids=spot_ids, sample_ids=sample_ids, region_labels=region_labels)
     np.savez(
         output_dir / "reference_cells.npz",
         X=reference_cells,
@@ -55,6 +59,19 @@ def main() -> int:
         cell_types=reference_labels,
     )
     np.savez(output_dir / "spot_composition.npz", Y=composition, cell_type_names=cell_types)
+    np.savez(
+        output_dir / "dlpfc_151673_bundle.npz",
+        spot_matrix=spot_matrix,
+        gene_names=genes,
+        spot_ids=spot_ids,
+        sample_ids=sample_ids,
+        region_labels=region_labels,
+        reference_matrix=reference_cells,
+        reference_gene_names=genes,
+        reference_cell_types=reference_labels,
+        target_composition=composition,
+        target_cell_type_names=cell_types,
+    )
 
     print(f"Wrote demo real-mode data to: {output_dir}")
     return 0

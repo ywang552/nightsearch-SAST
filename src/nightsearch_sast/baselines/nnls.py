@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import torch
+
+from nightsearch_sast.evaluation.metrics import evaluate_predictions
 
 
 def _project_to_simplex(v: torch.Tensor) -> torch.Tensor:
@@ -22,17 +26,6 @@ def nnls_predict_composition(
     num_steps: int = 150,
     lr: float = 5e-2,
 ) -> torch.Tensor:
-    """Estimate per-spot composition by projected gradient descent.
-
-    Args:
-        spot_features: [batch, genes]
-        reference_embeddings: [batch, cell_types, genes]
-        num_steps: optimization steps for each batch element.
-        lr: gradient step size.
-
-    Returns:
-        Tensor of shape [batch, cell_types] constrained to simplex.
-    """
     if spot_features.dim() != 2 or reference_embeddings.dim() != 3:
         raise ValueError("Expected spot_features [B,G] and reference_embeddings [B,C,G].")
 
@@ -59,24 +52,12 @@ def nnls_predict_composition(
     return comp.detach()
 
 
-
 def run_nnls_baseline(
     spot_matrix: torch.Tensor,
     reference_dictionary: torch.Tensor,
     num_steps: int = 150,
     lr: float = 5e-2,
 ) -> torch.Tensor:
-    """Apply NNLS baseline for a shared reference dictionary across all spots.
-
-    Args:
-        spot_matrix: Spot expression matrix with shape [n_spots, n_genes].
-        reference_dictionary: Reference dictionary with shape [n_cell_types, n_genes].
-        num_steps: Optimization steps for projected gradient descent.
-        lr: Gradient step size.
-
-    Returns:
-        Predicted compositions with shape [n_spots, n_cell_types].
-    """
     if spot_matrix.dim() != 2 or reference_dictionary.dim() != 2:
         raise ValueError("Expected spot_matrix [S,G] and reference_dictionary [C,G].")
     if spot_matrix.shape[1] != reference_dictionary.shape[1]:
@@ -84,3 +65,22 @@ def run_nnls_baseline(
 
     batch_reference = reference_dictionary.unsqueeze(0).expand(spot_matrix.shape[0], -1, -1)
     return nnls_predict_composition(spot_matrix, batch_reference, num_steps=num_steps, lr=lr)
+
+
+def run_nnls_with_metrics(
+    spot_matrix: torch.Tensor,
+    reference_dictionary: torch.Tensor,
+    split_name: str,
+    target_composition: torch.Tensor | None = None,
+) -> tuple[torch.Tensor, dict[str, Any]]:
+    """Run NNLS on aligned real-data tensors and return predictions + shared metrics."""
+    pred = run_nnls_baseline(spot_matrix, reference_dictionary)
+    metrics = evaluate_predictions(
+        method="nnls",
+        split=split_name,
+        predicted_composition=pred,
+        reference_dictionary=reference_dictionary,
+        spot_matrix=spot_matrix,
+        target_composition=target_composition,
+    )
+    return pred, metrics
